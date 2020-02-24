@@ -10,7 +10,7 @@ import (
 
 //
 type Statistic struct {
-	Uuid string
+	Uuid       string
 	Month      int
 	Year       int
 	Uri        string

@@ -11,9 +11,9 @@ import (
 
 //
 type Miniserver struct {
-	Protocol string
-	Host     string
-	User     MiniserverUser
+	Protocol   string
+	Host       string
+	User       MiniserverUser
 	Statistics []Statistic
 }
 
@@ -129,7 +129,7 @@ func parseStatistics(r io.Reader) (statsLinks []Statistic, err error) {
 
 					//
 					s := Statistic{
-						Uuid:uuid,
+						Uuid:  uuid,
 						Uri:   href,
 						Month: month,
 						Year:  year,

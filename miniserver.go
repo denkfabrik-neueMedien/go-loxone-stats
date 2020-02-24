@@ -14,6 +14,7 @@ type Miniserver struct {
 	Protocol string
 	Host     string
 	User     MiniserverUser
+	Statistics []Statistic
 }
 
 //
@@ -36,7 +37,7 @@ func NewMiniserver(host string, username string, password string) Miniserver {
 
 // return a slice of strings containing the uris to a single
 // statistics file on the loxone miniserver
-func (m Miniserver) FetchStatistics() (stats []Statistic, err error) {
+func (m *Miniserver) FetchStatistics() error {
 	//
 	var url = fmt.Sprintf("%s://%s/stats", m.Protocol, m.Host)
 	client := &http.Client{}
@@ -45,21 +46,43 @@ func (m Miniserver) FetchStatistics() (stats []Statistic, err error) {
 	// perform the request
 	res, err := client.Do(req)
 	if err != nil {
-		return []Statistic{}, err
+		return err
 	}
 
 	//
 	links, err := parseStatistics(res.Body)
 	if err != nil {
-		return []Statistic{}, err
+		return err
 	}
 
-	return links, nil
+	//
+	m.Statistics = links
+
+	return nil
+}
+
+//
+func (m *Miniserver) GetStatistic(uuid string, month int, year int) (statistic Statistic, err error) {
+	//
+	for _, s := range m.Statistics {
+		//
+		if s.Uuid == uuid && s.Month == month && s.Year == year {
+			statistic = s
+		}
+	}
+
+	// fetch statistics values
+	err = statistic.Fetch(m)
+	if err != nil {
+		return Statistic{}, err
+	}
+
+	return statistic, nil
 }
 
 // Return an request with the correct basic
 // authentication params set
-func (m Miniserver) authenticatedRequest(method string, url string) (req *http.Request, err error) {
+func (m *Miniserver) authenticatedRequest(method string, url string) (req *http.Request, err error) {
 	//
 	req, err = http.NewRequest(method, url, nil)
 	if err != nil {
@@ -99,11 +122,14 @@ func parseStatistics(r io.Reader) (statsLinks []Statistic, err error) {
 
 				// check if value exists
 				if len(href) > 0 {
+					//
+					uuid := uuid(href)
 					// get the month and year from the statistic link
 					month, year := monthYear(href)
 
 					//
 					s := Statistic{
+						Uuid:uuid,
 						Uri:   href,
 						Month: month,
 						Year:  year,
@@ -126,6 +152,15 @@ func parseStatisticsHref(token html.Token) string {
 	}
 
 	return ""
+}
+
+//
+func uuid(link string) string {
+	//
+	runes := []rune(link)
+	end := strings.Index(link, ".")
+
+	return string(runes[0:end])
 }
 
 // 0d01a765-026e-085a-ffff6f4bfad385ea.201703.xml

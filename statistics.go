@@ -8,8 +8,9 @@ import (
 	"net/http"
 )
 
-// 
+//
 type Statistic struct {
+	Uuid string
 	Month      int
 	Year       int
 	Uri        string
@@ -32,7 +33,7 @@ type StatisticValue struct {
 
 // fetch the statistic values of a single statistic
 // from the loxone miniserver
-func (s *Statistic) Fetch(m Miniserver) error {
+func (s *Statistic) Fetch(m *Miniserver) error {
 	//
 	var url = fmt.Sprintf("%s://%s/stats/%s", m.Protocol, m.Host, s.Uri)
 	client := &http.Client{}

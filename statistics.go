@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 //
@@ -27,8 +28,8 @@ type Statistics struct {
 
 //
 type StatisticValue struct {
-	DateTime string  `xml:"T,attr"`
-	Value    float64 `xml:"V,attr"`
+	DateTime StatisticValueTime `xml:"T,attr"`
+	Value    float64            `xml:"V,attr"`
 }
 
 // fetch the statistic values of a single statistic
@@ -78,4 +79,21 @@ func ParseStatisticValues(r io.Reader) (s Statistics, err error) {
 	}
 
 	return statistics, nil
+}
+
+//
+type StatisticValueTime struct {
+	time.Time
+}
+
+//
+func (t *StatisticValueTime) UnmarshalXMLAttr(attr xml.Attr) error {
+	//
+	parsed, err := time.Parse("2006-01-02 15:04:05", attr.Value)
+	if err != nil {
+		return err
+	}
+
+	*t = StatisticValueTime{parsed}
+	return nil
 }
